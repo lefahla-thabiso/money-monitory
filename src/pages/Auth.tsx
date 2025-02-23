@@ -5,13 +5,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Mail, Lock, User, Check, X } from "lucide-react";
+import { UserPlus, Mail, Lock, User, CreditCard } from "lucide-react";
 
 interface FormData {
   fullName: string;
   email: string;
   password: string;
   contact: string;
+  accountNumber: string;
 }
 
 const Auth = () => {
@@ -22,6 +23,7 @@ const Auth = () => {
     email: "",
     password: "",
     contact: "",
+    accountNumber: "",
   });
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const navigate = useNavigate();
@@ -36,6 +38,11 @@ const Auth = () => {
       }
       if (!formData.contact.trim()) {
         newErrors.contact = "Contact number is required";
+      }
+      if (!formData.accountNumber.trim()) {
+        newErrors.accountNumber = "Account number is required";
+      } else if (!/^\d{10,}$/.test(formData.accountNumber)) {
+        newErrors.accountNumber = "Account number must be at least 10 digits";
       }
     }
     
@@ -135,6 +142,23 @@ const Auth = () => {
                   <p className="text-sm text-destructive mt-1">{errors.contact}</p>
                 )}
               </div>
+              <div className="relative">
+                <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  name="accountNumber"
+                  placeholder="Account Number"
+                  value={formData.accountNumber}
+                  onChange={handleInputChange}
+                  className="pl-9"
+                  pattern="\d*"
+                  minLength={10}
+                  maxLength={16}
+                />
+                {errors.accountNumber && (
+                  <p className="text-sm text-destructive mt-1">{errors.accountNumber}</p>
+                )}
+              </div>
             </div>
           )}
           
@@ -222,6 +246,7 @@ const Auth = () => {
                 email: "",
                 password: "",
                 contact: "",
+                accountNumber: "",
               });
               setErrors({});
             }}
