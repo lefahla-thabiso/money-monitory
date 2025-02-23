@@ -5,19 +5,15 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Mail, Lock, User, CreditCard } from "lucide-react";
-
-interface FormData {
-  fullName: string;
-  email: string;
-  password: string;
-  contact: string;
-  accountNumber: string;
-}
+import { UserPlus, Mail, Lock } from "lucide-react";
+import { SignupFields } from "@/components/auth/SignupFields";
+import { VerificationMethodSelector } from "@/components/auth/VerificationMethod";
+import { validateAuthForm } from "@/utils/authValidation";
+import { FormData, VerificationMethod } from "@/types/auth";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [verificationMethod, setVerificationMethod] = useState<"email" | "phone" | null>(null);
+  const [verificationMethod, setVerificationMethod] = useState<VerificationMethod>(null);
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
     email: "",
@@ -29,46 +25,12 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const validateForm = () => {
-    const newErrors: Partial<FormData> = {};
-    
-    if (isSignUp) {
-      if (!formData.fullName.trim()) {
-        newErrors.fullName = "Full name is required";
-      }
-      if (!formData.contact.trim()) {
-        newErrors.contact = "Contact number is required";
-      }
-      if (!formData.accountNumber.trim()) {
-        newErrors.accountNumber = "Account number is required";
-      } else if (!/^\d{10,}$/.test(formData.accountNumber)) {
-        newErrors.accountNumber = "Account number must be at least 10 digits";
-      }
-    }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
-    }
-    
-    if (!formData.password.trim()) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
-    // Clear error when user starts typing
     if (errors[name as keyof FormData]) {
       setErrors((prev) => ({
         ...prev,
@@ -80,7 +42,10 @@ const Auth = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    const validationErrors = validateAuthForm(formData, isSignUp);
+    setErrors(validationErrors);
+    
+    if (Object.keys(validationErrors).length > 0) {
       toast({
         title: "Error",
         description: "Please check all required fields",
@@ -98,7 +63,6 @@ const Auth = () => {
       return;
     }
 
-    // Add authentication logic here
     toast({
       title: isSignUp ? "Account Created" : "Welcome Back",
       description: isSignUp ? "Your account has been created successfully!" : "You have been logged in successfully!",
@@ -122,53 +86,11 @@ const Auth = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {isSignUp && (
-            <div className="space-y-4">
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  name="fullName"
-                  placeholder="Full Name"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  className="pl-9"
-                />
-                {errors.fullName && (
-                  <p className="text-sm text-destructive mt-1">{errors.fullName}</p>
-                )}
-              </div>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="tel"
-                  name="contact"
-                  placeholder="Contact Number"
-                  value={formData.contact}
-                  onChange={handleInputChange}
-                  className="pl-9"
-                />
-                {errors.contact && (
-                  <p className="text-sm text-destructive mt-1">{errors.contact}</p>
-                )}
-              </div>
-              <div className="relative">
-                <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="text"
-                  name="accountNumber"
-                  placeholder="Account Number"
-                  value={formData.accountNumber}
-                  onChange={handleInputChange}
-                  className="pl-9"
-                  pattern="\d*"
-                  minLength={10}
-                  maxLength={16}
-                />
-                {errors.accountNumber && (
-                  <p className="text-sm text-destructive mt-1">{errors.accountNumber}</p>
-                )}
-              </div>
-            </div>
+            <SignupFields
+              formData={formData}
+              errors={errors}
+              handleInputChange={handleInputChange}
+            />
           )}
           
           <div className="relative">
@@ -202,39 +124,10 @@ const Auth = () => {
           </div>
 
           {isSignUp && (
-            <div className="space-y-4">
-              <p className="text-sm font-medium text-center">
-                Choose verification method
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  type="button"
-                  variant={verificationMethod === "email" ? "default" : "outline"}
-                  className={`w-full button-hover ${
-                    verificationMethod === "email" 
-                      ? "bg-mint-500 hover:bg-mint-600 text-white"
-                      : ""
-                  }`}
-                  onClick={() => setVerificationMethod("email")}
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Email
-                </Button>
-                <Button
-                  type="button"
-                  variant={verificationMethod === "phone" ? "default" : "outline"}
-                  className={`w-full button-hover ${
-                    verificationMethod === "phone"
-                      ? "bg-mint-500 hover:bg-mint-600 text-white"
-                      : ""
-                  }`}
-                  onClick={() => setVerificationMethod("phone")}
-                >
-                  <User className="mr-2 h-4 w-4" />
-                  Phone
-                </Button>
-              </div>
-            </div>
+            <VerificationMethodSelector
+              verificationMethod={verificationMethod}
+              setVerificationMethod={setVerificationMethod}
+            />
           )}
 
           <Button 
