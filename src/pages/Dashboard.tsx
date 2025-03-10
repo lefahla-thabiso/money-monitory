@@ -11,13 +11,17 @@ import {
   Wallet, 
   BarChart3, 
   ArrowRight, 
-  RefreshCcw 
+  RefreshCcw,
+  PlusCircle,
+  X
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useLenderOffers } from "@/hooks/use-lender-offers";
 import { LenderOffer } from "@/types/lender";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CreateLenderOfferForm } from "@/components/CreateLenderOfferForm";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -26,6 +30,7 @@ const Dashboard = () => {
   
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   // Handle any errors with data fetching
   if (error) {
@@ -92,9 +97,22 @@ const Dashboard = () => {
       
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Dashboard Header */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-semibold text-gray-900">Available Lenders</h2>
-          <p className="text-muted-foreground mt-1">Find trusted lenders in your area</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-semibold text-gray-900">Available Lenders</h2>
+            <p className="text-muted-foreground mt-1">Find trusted lenders in your area</p>
+          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-mint-500 hover:bg-mint-600">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Create Offer
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <CreateLenderOfferForm />
+            </DialogContent>
+          </Dialog>
         </div>
         
         {/* Stats Section */}
@@ -208,9 +226,16 @@ const Dashboard = () => {
                       <h3 className="text-xl font-medium">{offer.full_name}</h3>
                       <p className="text-sm text-muted-foreground">{offer.contact}</p>
                     </div>
-                    <Badge variant="secondary" className="bg-mint-100 text-mint-800">
-                      {offer.payment_method}
-                    </Badge>
+                    <div className="flex gap-2">
+                      <Badge variant="secondary" className="bg-mint-100 text-mint-800">
+                        {offer.payment_method}
+                      </Badge>
+                      {offer.interest_rate && (
+                        <Badge variant="outline" className="bg-amber-100 text-amber-800">
+                          {offer.interest_rate}% interest
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <div className="w-full sm:w-auto text-left sm:text-right space-y-3">
                     <div>
