@@ -1,6 +1,10 @@
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { LogOut, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface Lending {
   id: string;
@@ -23,10 +27,38 @@ const mockLendings: Lending[] = [
 ];
 
 const Lendings = () => {
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-mint-50 to-white p-6">
       <div className="max-w-4xl mx-auto space-y-8">
-        <h1 className="text-3xl font-semibold">My Lendings</h1>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => navigate("/dashboard")}
+              className="h-9 w-9"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-3xl font-semibold">My Lendings</h1>
+          </div>
+          <Button
+            onClick={handleSignOut}
+            variant="outline"
+            className="button-hover"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
 
         <div className="grid gap-6">
           {mockLendings.map((lending) => (

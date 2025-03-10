@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { SignupFields } from "@/components/auth/SignupFields";
 import { VerificationMethodSelector } from "@/components/auth/VerificationMethod";
 import { validateAuthForm } from "@/utils/authValidation";
 import { FormData, VerificationMethod } from "@/types/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -22,8 +24,17 @@ const Auth = () => {
     accountNumber: "",
   });
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Redirect if already logged in
+  if (user) {
+    navigate("/dashboard");
+    return null;
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -39,7 +50,7 @@ const Auth = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const validationErrors = validateAuthForm(formData, isSignUp);
@@ -63,11 +74,57 @@ const Auth = () => {
       return;
     }
 
-    toast({
-      title: isSignUp ? "Account Created" : "Welcome Back",
-      description: isSignUp ? "Your account has been created successfully!" : "You have been logged in successfully!",
-    });
-    navigate("/dashboard");
+    setIsLoading(true);
+
+    try {
+      if (isSignUp) {
+        // Sign up
+        const { data, error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              fullName: formData.fullName,
+              contact: formData.contact,
+              accountNumber: formData.accountNumber
+            }
+          }
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Account Created",
+          description: "Your account has been created successfully! Please check your email to confirm your account.",
+        });
+        
+      } else {
+        // Sign in
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Welcome Back",
+          description: "You have been logged in successfully!",
+        });
+        
+        // Get the redirect path or default to dashboard
+        const from = (location.state as any)?.from?.pathname || "/dashboard";
+        navigate(from);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Authentication Error",
+        description: error.message || "An error occurred during authentication",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -102,6 +159,7 @@ const Auth = () => {
               value={formData.email}
               onChange={handleInputChange}
               className="pl-9"
+              disabled={isLoading}
             />
             {errors.email && (
               <p className="text-sm text-destructive mt-1">{errors.email}</p>
@@ -117,6 +175,7 @@ const Auth = () => {
               value={formData.password}
               onChange={handleInputChange}
               className="pl-9"
+              disabled={isLoading}
             />
             {errors.password && (
               <p className="text-sm text-destructive mt-1">{errors.password}</p>
@@ -133,8 +192,9 @@ const Auth = () => {
           <Button 
             type="submit" 
             className="w-full button-hover bg-mint-500 hover:bg-mint-600"
+            disabled={isLoading}
           >
-            {isSignUp ? (
+            {isLoading ? "Processing..." : isSignUp ? (
               <>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Sign Up
@@ -161,6 +221,7 @@ const Auth = () => {
               setErrors({});
             }}
             className="text-sm text-mint-600 hover:text-mint-700 transition-colors"
+            disabled={isLoading}
           >
             {isSignUp
               ? "Already have an account? Sign in"

@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { SearchIcon, SlidersHorizontal } from "lucide-react";
+import { SearchIcon, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface LenderOffer {
   id: string;
@@ -37,6 +38,7 @@ const Dashboard = () => {
   const [offers] = useState<LenderOffer[]>(mockOffers);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
+  const { user, signOut } = useAuth();
 
   const filteredOffers = offers.filter((offer) => {
     const matchesSearch = offer.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -47,6 +49,11 @@ const Dashboard = () => {
 
   const uniquePaymentMethods = Array.from(new Set(offers.map(offer => offer.paymentMethod)));
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-mint-50 to-white p-6">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -55,13 +62,23 @@ const Dashboard = () => {
             <h1 className="text-3xl font-semibold">Available Lenders</h1>
             <p className="text-muted-foreground mt-1">Find trusted lenders in your area</p>
           </div>
-          <Button
-            onClick={() => navigate("/lendings")}
-            variant="outline"
-            className="button-hover"
-          >
-            My Lendings
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => navigate("/lendings")}
+              variant="outline"
+              className="button-hover"
+            >
+              My Lendings
+            </Button>
+            <Button
+              onClick={handleSignOut}
+              variant="outline"
+              className="button-hover"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4">
