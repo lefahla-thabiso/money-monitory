@@ -16,6 +16,7 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          interest_rate: number | null
           payment_method: string
           user_id: string
         }
@@ -25,6 +26,7 @@ export type Database = {
           created_at?: string
           full_name: string
           id?: string
+          interest_rate?: number | null
           payment_method: string
           user_id: string
         }
@@ -34,6 +36,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          interest_rate?: number | null
           payment_method?: string
           user_id?: string
         }
