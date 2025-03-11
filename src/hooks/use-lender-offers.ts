@@ -5,11 +5,18 @@ import { LenderOffer, CreateLenderOfferFormData } from "@/types/lender";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 
-export async function fetchLenderOffers(): Promise<LenderOffer[]> {
-  const { data, error } = await supabase
+export async function fetchLenderOffers(excludeUserId?: string): Promise<LenderOffer[]> {
+  let query = supabase
     .from("lender_offers")
     .select("*")
     .order("created_at", { ascending: false });
+  
+  // If excludeUserId is provided, filter out offers from that user
+  if (excludeUserId) {
+    query = query.neq('user_id', excludeUserId);
+  }
+  
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching lender offers:", error);
@@ -20,11 +27,41 @@ export async function fetchLenderOffers(): Promise<LenderOffer[]> {
   return data || [];
 }
 
-export function useLenderOffers() {
+export async function fetchUserLenderOffers(userId: string): Promise<LenderOffer[]> {
+  const { data, error } = await supabase
+    .from("lender_offers")
+    .select("*")
+    .eq('user_id', userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching user lender offers:", error);
+    toast.error("Failed to load your lending offers");
+    throw error;
+  }
+
+  return data || [];
+}
+
+export function useLenderOffers(excludeCurrentUser: boolean = false) {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ["lenderOffers"],
-    queryFn: fetchLenderOffers,
+    queryKey: ["lenderOffers", excludeCurrentUser, user?.id],
+    queryFn: () => fetchLenderOffers(excludeCurrentUser ? user?.id : undefined),
     refetchOnWindowFocus: false,
+    enabled: excludeCurrentUser ? !!user : true,
+  });
+}
+
+export function useUserLenderOffers() {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ["userLenderOffers", user?.id],
+    queryFn: () => user ? fetchUserLenderOffers(user.id) : Promise.resolve([]),
+    refetchOnWindowFocus: false,
+    enabled: !!user,
   });
 }
 
@@ -58,6 +95,7 @@ export function useCreateLenderOffer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lenderOffers"] });
+      queryClient.invalidateQueries({ queryKey: ["userLenderOffers"] });
       toast.success("Lender offer created successfully");
     },
     onError: (error: Error) => {

@@ -10,7 +10,8 @@ import { SearchAndFilters } from "@/components/dashboard/SearchAndFilters";
 import { LenderList } from "@/components/dashboard/LenderList";
 
 const Dashboard = () => {
-  const { data: offers, isLoading, error, refetch } = useLenderOffers();
+  // Exclude current user's offers on the dashboard
+  const { data: offers, isLoading, error, refetch } = useLenderOffers(true);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
