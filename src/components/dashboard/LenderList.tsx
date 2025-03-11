@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LenderOffer } from "@/types/lender";
 import { toast } from "sonner";
+import { useBorrowOffer } from "@/hooks/use-active-loans";
 
 interface LenderListProps {
   isLoading: boolean;
@@ -12,9 +13,10 @@ interface LenderListProps {
 }
 
 export const LenderList = ({ isLoading, filteredOffers }: LenderListProps) => {
+  const { mutate: borrowOffer, isPending } = useBorrowOffer();
+
   const handleBorrow = (offer: LenderOffer) => {
-    toast.success(`Borrow request sent to ${offer.full_name}`);
-    // This would typically trigger a request to the backend
+    borrowOffer(offer.id);
   };
 
   if (isLoading) {
@@ -83,8 +85,9 @@ export const LenderList = ({ isLoading, filteredOffers }: LenderListProps) => {
               <Button 
                 className="w-full sm:w-auto bg-mint-500 hover:bg-mint-600 button-hover"
                 onClick={() => handleBorrow(offer)}
+                disabled={isPending}
               >
-                Borrow
+                {isPending ? "Processing..." : "Borrow"}
               </Button>
             </div>
           </div>

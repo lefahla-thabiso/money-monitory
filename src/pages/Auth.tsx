@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UserPlus, Mail, Lock } from "lucide-react";
 import { SignupFields } from "@/components/auth/SignupFields";
 import { VerificationMethodSelector } from "@/components/auth/VerificationMethod";
+import { ForgotPassword } from "@/components/auth/ForgotPassword";
 import { validateAuthForm } from "@/utils/authValidation";
 import { FormData, VerificationMethod } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [verificationMethod, setVerificationMethod] = useState<VerificationMethod>(null);
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
@@ -127,6 +129,16 @@ const Auth = () => {
     }
   };
 
+  if (isForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-mint-50 to-white px-4">
+        <Card className="w-full max-w-md p-8 space-y-6 animate-fadeIn">
+          <ForgotPassword onBack={() => setIsForgotPassword(false)} />
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-mint-50 to-white px-4">
       <Card className="w-full max-w-md p-8 space-y-6 animate-fadeIn">
@@ -187,6 +199,18 @@ const Auth = () => {
               verificationMethod={verificationMethod}
               setVerificationMethod={setVerificationMethod}
             />
+          )}
+
+          {!isSignUp && (
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => setIsForgotPassword(true)}
+                className="text-sm text-mint-600 hover:text-mint-700 transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
           )}
 
           <Button 

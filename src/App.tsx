@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Lendings from "./pages/Lendings";
+import ActiveLoans from "./pages/ActiveLoans";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Lendings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/active-loans" 
+              element={
+                <ProtectedRoute>
+                  <ActiveLoans />
                 </ProtectedRoute>
               } 
             />

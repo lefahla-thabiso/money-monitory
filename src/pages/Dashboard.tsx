@@ -1,7 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useLenderOffers } from "@/hooks/use-lender-offers";
+import { useActiveLoansByBorrower } from "@/hooks/use-active-loans";
 import { LenderOffer } from "@/types/lender";
 import { Header } from "@/components/dashboard/Header";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -12,6 +13,7 @@ import { LenderList } from "@/components/dashboard/LenderList";
 const Dashboard = () => {
   // Exclude current user's offers on the dashboard
   const { data: offers, isLoading, error, refetch } = useLenderOffers(true);
+  const { data: activeLoans } = useActiveLoansByBorrower();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
@@ -21,13 +23,22 @@ const Dashboard = () => {
     console.error("Error loading lender offers:", error);
   }
 
-  const filteredOffers = offers?.filter((offer) => {
+  // Filter out offers that the user has already borrowed
+  const availableOffers = offers?.filter(offer => {
+    // Check if this offer is already borrowed by the user
+    const alreadyBorrowed = activeLoans?.some(
+      loan => loan.lender_offer_id === offer.id
+    );
+    return !alreadyBorrowed;
+  }) || [];
+
+  const filteredOffers = availableOffers.filter((offer) => {
     const matchesSearch = 
       offer.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       offer.contact?.includes(searchTerm);
     const matchesPaymentMethod = !selectedPaymentMethod || offer.payment_method === selectedPaymentMethod;
     return matchesSearch && matchesPaymentMethod;
-  }) || [];
+  });
 
   const uniquePaymentMethods = Array.from(
     new Set(offers?.map(offer => offer.payment_method) || [])
