@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      active_loans: {
+        Row: {
+          borrower_id: string
+          created_at: string
+          id: string
+          lender_id: string
+          lender_offer_id: string
+          payment_proof: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          borrower_id: string
+          created_at?: string
+          id?: string
+          lender_id: string
+          lender_offer_id: string
+          payment_proof?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          borrower_id?: string
+          created_at?: string
+          id?: string
+          lender_id?: string
+          lender_offer_id?: string
+          payment_proof?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_loans_lender_offer_id_fkey"
+            columns: ["lender_offer_id"]
+            isOneToOne: false
+            referencedRelation: "lender_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lender_offers: {
         Row: {
           amount: number

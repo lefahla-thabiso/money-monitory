@@ -8,7 +8,7 @@ import { ArrowLeft, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useActiveLoansByBorrower, useUpdateLoanPayment } from "@/hooks/use-active-loans";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsItem, TabsList } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 

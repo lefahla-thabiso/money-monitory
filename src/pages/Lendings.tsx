@@ -10,7 +10,7 @@ import { useUserLenderOffers } from "@/hooks/use-lender-offers";
 import { useActiveLoansByLender, useConfirmLoanPayment } from "@/hooks/use-active-loans";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsItem, TabsList } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
 
 const Lendings = () => {
   const navigate = useNavigate();
@@ -83,15 +83,15 @@ const Lendings = () => {
 
         <Tabs defaultValue="offers">
           <TabsList className="mb-4">
-            <TabsItem value="offers">My Offers</TabsItem>
-            <TabsItem value="loans" className="relative">
+            <TabsList.Item value="offers">My Offers</TabsList.Item>
+            <TabsList.Item value="loans" className="relative">
               Active Loans
               {pendingConfirmations > 0 && (
                 <span className="absolute -top-2 -right-2 rounded-full bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center">
                   {pendingConfirmations}
                 </span>
               )}
-            </TabsItem>
+            </TabsList.Item>
           </TabsList>
           
           <TabsContent value="offers">
