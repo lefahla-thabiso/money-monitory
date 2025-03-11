@@ -4,7 +4,7 @@ export interface ActiveLoan {
   lender_offer_id: string;
   borrower_id: string;
   lender_id: string;
-  status: 'pending' | 'paid' | 'confirmed';
+  status: 'pending' | 'paid' | 'confirmed' | string; // Adding string to handle any other status
   created_at: string;
   updated_at: string;
   payment_proof?: string;

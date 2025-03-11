@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ActiveLoan, LoanWithDetails } from "@/types/loans";
@@ -27,7 +26,7 @@ export async function fetchActiveLoansByBorrowerId(borrowerId: string): Promise<
     throw error;
   }
 
-  return data || [];
+  return (data || []) as LoanWithDetails[];
 }
 
 export async function fetchActiveLoansByLenderId(lenderId: string): Promise<LoanWithDetails[]> {
@@ -52,7 +51,7 @@ export async function fetchActiveLoansByLenderId(lenderId: string): Promise<Loan
     throw error;
   }
 
-  return data || [];
+  return (data || []) as LoanWithDetails[];
 }
 
 export function useActiveLoansByBorrower() {
@@ -87,7 +86,6 @@ export function useBorrowOffer() {
         throw new Error("You must be logged in to borrow");
       }
       
-      // First get the offer to get the lender_id
       const { data: offerData, error: offerError } = await supabase
         .from("lender_offers")
         .select("user_id")
