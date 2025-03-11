@@ -1,16 +1,17 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft, Upload, PaperclipIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useActiveLoansByBorrower, useUpdateLoanPayment } from "@/hooks/use-active-loans";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
 
 const ActiveLoans = () => {
   const navigate = useNavigate();
@@ -20,22 +21,52 @@ const ActiveLoans = () => {
   const [selectedLoan, setSelectedLoan] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [paymentProof, setPaymentProof] = useState<string>("");
+  const [paymentFile, setPaymentFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleLoanClick = (loanId: string) => {
     setSelectedLoan(loanId);
     setOpen(true);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Check file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File is too large. Maximum size is 5MB.");
+        return;
+      }
+      
+      // Check file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      if (!validTypes.includes(file.type)) {
+        toast.error("Invalid file type. Please upload an image (JPEG, PNG) or PDF.");
+        return;
+      }
+      
+      setPaymentFile(file);
+    }
+  };
+
   const handlePaymentSubmit = () => {
     if (!selectedLoan) return;
     
+    if (!paymentProof.trim() && !paymentFile) {
+      toast.error("Please provide a transaction ID or upload a payment proof");
+      return;
+    }
+    
     updatePayment({
       loanId: selectedLoan,
-      paymentProof
+      paymentProof: paymentProof.trim(),
+      paymentFile: paymentFile
     }, {
       onSuccess: () => {
         setOpen(false);
         setPaymentProof("");
+        setPaymentFile(null);
         setSelectedLoan(null);
       }
     });
@@ -170,15 +201,55 @@ const ActiveLoans = () => {
                     </div>
                     
                     {loan.status === 'pending' && (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Payment Proof</p>
-                        <Input
-                          placeholder="Paste transaction ID or reference number"
-                          value={paymentProof}
-                          onChange={(e) => setPaymentProof(e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Please make a payment via {loan.offer.payment_method} to {loan.offer.contact} and enter the transaction details above
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="payment-proof">Transaction ID or Reference (Optional)</Label>
+                          <Input
+                            id="payment-proof"
+                            placeholder="Paste transaction ID or reference number"
+                            value={paymentProof}
+                            onChange={(e) => setPaymentProof(e.target.value)}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="payment-file">Upload Payment Proof (Optional)</Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              id="payment-file"
+                              type="file"
+                              ref={fileInputRef}
+                              className="hidden"
+                              accept="image/jpeg,image/png,image/jpg,application/pdf"
+                              onChange={handleFileChange}
+                            />
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              onClick={() => fileInputRef.current?.click()}
+                              className="flex-1"
+                            >
+                              <PaperclipIcon className="mr-2 h-4 w-4" />
+                              {paymentFile ? paymentFile.name : "Select File"}
+                            </Button>
+                            {paymentFile && (
+                              <Button 
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                onClick={() => setPaymentFile(null)}
+                              >
+                                &times;
+                              </Button>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Accept images (JPEG, PNG) or PDF up to 5MB
+                          </p>
+                        </div>
+                        
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Please make a payment via {loan.offer.payment_method} to {loan.offer.contact} and provide proof above
                         </p>
                       </div>
                     )}
@@ -192,7 +263,11 @@ const ActiveLoans = () => {
             <Button 
               type="button" 
               variant="outline" 
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                setOpen(false);
+                setPaymentProof("");
+                setPaymentFile(null);
+              }}
             >
               Cancel
             </Button>
@@ -201,7 +276,7 @@ const ActiveLoans = () => {
                 type="button"
                 className="bg-mint-500 hover:bg-mint-600"
                 onClick={handlePaymentSubmit}
-                disabled={isUpdatingPayment || !paymentProof.trim()}
+                disabled={isUpdatingPayment || (!paymentProof.trim() && !paymentFile)}
               >
                 {isUpdatingPayment ? "Submitting..." : "I've Paid"}
                 <Upload className="ml-2 h-4 w-4" />

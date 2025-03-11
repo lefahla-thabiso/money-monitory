@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ArrowLeft, Check, Bell } from "lucide-react";
+import { LogOut, ArrowLeft, Check, Bell, FileIcon, ImageIcon, ExternalLink } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserLenderOffers } from "@/hooks/use-lender-offers";
 import { useActiveLoansByLender, useConfirmLoanPayment } from "@/hooks/use-active-loans";
@@ -21,6 +21,8 @@ const Lendings = () => {
   
   const [selectedLoan, setSelectedLoan] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   const handleSignOut = async () => {
     await signOut();
@@ -41,6 +43,15 @@ const Lendings = () => {
         setSelectedLoan(null);
       }
     });
+  };
+
+  const handleViewPaymentProof = (url: string) => {
+    if (url.toLowerCase().endsWith('.pdf')) {
+      window.open(url, '_blank');
+    } else {
+      setSelectedImageUrl(url);
+      setImageViewerOpen(true);
+    }
   };
 
   // Count notifications (loans with paid status that need confirmation)
@@ -293,10 +304,37 @@ const Lendings = () => {
                     
                     {loan.payment_proof && (
                       <div>
-                        <p className="text-sm font-medium">Payment Proof</p>
+                        <p className="text-sm font-medium">Transaction ID</p>
                         <p className="text-sm mt-1 p-2 bg-gray-50 border border-gray-200 rounded">
                           {loan.payment_proof}
                         </p>
+                      </div>
+                    )}
+                    
+                    {loan.payment_file && (
+                      <div>
+                        <p className="text-sm font-medium">Payment Proof</p>
+                        <div className="mt-1 p-2 bg-gray-50 border border-gray-200 rounded flex justify-between items-center">
+                          <div className="flex items-center">
+                            {loan.payment_file.toLowerCase().endsWith('.pdf') ? (
+                              <FileIcon className="h-5 w-5 mr-2" />
+                            ) : (
+                              <ImageIcon className="h-5 w-5 mr-2" />
+                            )}
+                            <span className="text-sm">Payment document</span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewPaymentProof(loan.payment_file!);
+                            }}
+                          >
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </>
@@ -324,6 +362,34 @@ const Lendings = () => {
                 <Check className="ml-2 h-4 w-4" />
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Image Viewer Dialog */}
+      <Dialog open={imageViewerOpen} onOpenChange={setImageViewerOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Payment Proof</DialogTitle>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {selectedImageUrl && (
+              <img 
+                src={selectedImageUrl} 
+                alt="Payment Proof" 
+                className="w-full h-auto rounded-md"
+              />
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              type="button" 
+              onClick={() => setImageViewerOpen(false)}
+            >
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

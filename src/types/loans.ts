@@ -8,6 +8,7 @@ export interface ActiveLoan {
   created_at: string;
   updated_at: string;
   payment_proof?: string;
+  payment_file?: string; // Added for file upload URL
 }
 
 export interface LoanWithDetails extends ActiveLoan {

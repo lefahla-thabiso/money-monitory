@@ -7,10 +7,43 @@ export function useUpdateLoanPayment() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ loanId, paymentProof }: { loanId: string, paymentProof?: string }) => {
+    mutationFn: async ({ 
+      loanId, 
+      paymentProof, 
+      paymentFile 
+    }: { 
+      loanId: string, 
+      paymentProof?: string, 
+      paymentFile?: File 
+    }) => {
+      let fileUrl = null;
+      
+      // Upload file if provided
+      if (paymentFile) {
+        const fileName = `payment_proof_${loanId}_${Date.now()}`;
+        const fileExt = paymentFile.name.split('.').pop();
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('payment_proofs')
+          .upload(`${fileName}.${fileExt}`, paymentFile);
+          
+        if (uploadError) {
+          console.error("Error uploading payment proof file:", uploadError);
+          throw uploadError;
+        }
+        
+        // Get public URL
+        const { data: publicUrlData } = supabase.storage
+          .from('payment_proofs')
+          .getPublicUrl(uploadData.path);
+          
+        fileUrl = publicUrlData.publicUrl;
+      }
+      
       const updates = {
         status: 'paid',
-        payment_proof: paymentProof,
+        payment_proof: paymentProof || null,
+        payment_file: fileUrl || null,
         updated_at: new Date().toISOString()
       };
       
