@@ -41,12 +41,22 @@ export const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
       
       setIsLoading(true);
       
-      // Fetch user's security questions from profiles table with security question metadata
+      // First check if the user exists in auth.users
+      const { data: authUser, error: authError } = await supabase.auth
+        .getUser(email);
+        
+      if (authError) {
+        console.log("Auth check error:", authError);
+      }
+      
+      // Then fetch user's security questions from profiles table
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', email)
         .single();
+      
+      console.log("Profile lookup result:", { data, error });
         
       if (error) {
         if (error.code === 'PGRST116') {
