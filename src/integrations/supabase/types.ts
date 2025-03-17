@@ -91,6 +91,10 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          security_answer1: string | null
+          security_answer2: string | null
+          security_question1: string | null
+          security_question2: string | null
           updated_at: string
         }
         Insert: {
@@ -100,6 +104,10 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          security_answer1?: string | null
+          security_answer2?: string | null
+          security_question1?: string | null
+          security_question2?: string | null
           updated_at?: string
         }
         Update: {
@@ -109,6 +117,10 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          security_answer1?: string | null
+          security_answer2?: string | null
+          security_question1?: string | null
+          security_question2?: string | null
           updated_at?: string
         }
         Relationships: []

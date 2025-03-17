@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 
 const ActiveLoans = () => {
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ const ActiveLoans = () => {
     }
   };
 
-  const handlePaymentSubmit = () => {
+  const handlePaymentSubmit = async () => {
     if (!selectedLoan) return;
     
     if (!paymentProof.trim() && !paymentFile) {
@@ -58,18 +58,49 @@ const ActiveLoans = () => {
       return;
     }
     
-    updatePayment({
-      loanId: selectedLoan,
-      paymentProof: paymentProof.trim(),
-      paymentFile: paymentFile
-    }, {
-      onSuccess: () => {
-        setOpen(false);
-        setPaymentProof("");
-        setPaymentFile(null);
-        setSelectedLoan(null);
+    try {
+      let fileUrl = "";
+      
+      // Upload file if provided
+      if (paymentFile) {
+        const fileName = `${Date.now()}_${paymentFile.name}`;
+        
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('payment_proofs')
+          .upload(fileName, paymentFile, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
+        if (uploadError) {
+          throw new Error(`File upload failed: ${uploadError.message}`);
+        }
+        
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('payment_proofs')
+          .getPublicUrl(fileName);
+          
+        fileUrl = urlData.publicUrl;
       }
-    });
+      
+      // Update payment info with transaction ID and/or file URL
+      updatePayment({
+        loanId: selectedLoan,
+        paymentProof: paymentProof.trim(),
+        fileUrl: fileUrl
+      }, {
+        onSuccess: () => {
+          setOpen(false);
+          setPaymentProof("");
+          setPaymentFile(null);
+          setSelectedLoan(null);
+        }
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to upload payment proof");
+    }
   };
 
   const getStatusBadge = (status: string) => {

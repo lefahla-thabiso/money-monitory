@@ -55,7 +55,7 @@ export const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
         throw error;
       }
       
-      // Check if user has security questions in their metadata
+      // Check if user has security questions set
       if (!data.security_question1 || !data.security_question2) {
         throw new Error("Security questions have not been set up for this account");
       }

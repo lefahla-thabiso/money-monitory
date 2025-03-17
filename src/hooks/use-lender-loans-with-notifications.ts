@@ -1,13 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
-export const useActiveLoansByBorrower = () => {
+export const useLenderLoansWithNotifications = () => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['active-loans', 'borrower', user?.id],
+    queryKey: ['lender-loans-with-notifications', user?.id],
     queryFn: async () => {
       if (!user) throw new Error("User not authenticated");
       
@@ -15,46 +15,46 @@ export const useActiveLoansByBorrower = () => {
         .from('active_loans')
         .select(`
           *,
-          offer:lender_offer_id (
+          borrower:borrower_id (
             id, 
             full_name, 
             contact, 
+            email
+          ),
+          offer:lender_offer_id (
+            id, 
+            full_name, 
             amount, 
             payment_method, 
             interest_rate
           )
         `)
-        .eq('borrower_id', user.id);
+        .eq('lender_id', user.id)
+        .order('updated_at', { ascending: false });
         
       if (error) throw error;
-      return data;
+      
+      // Count new notifications (loans with status 'paid' that haven't been confirmed)
+      const notificationCount = data.filter(loan => loan.status === 'paid').length;
+      
+      return {
+        loans: data,
+        notificationCount
+      };
     },
     enabled: !!user,
   });
 };
 
-interface UpdatePaymentParams {
-  loanId: string;
-  paymentProof?: string;
-  fileUrl?: string;
-}
-
-export const useUpdateLoanPayment = () => {
+export const useConfirmLoanPayment = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ loanId, paymentProof, fileUrl }: UpdatePaymentParams) => {
-      // Combine text proof and file URL if both provided
-      let proofText = paymentProof || '';
-      if (fileUrl) {
-        proofText = proofText ? `${proofText} | ${fileUrl}` : fileUrl;
-      }
-      
+    mutationFn: async (loanId: string) => {
       const { data, error } = await supabase
         .from('active_loans')
         .update({
-          payment_proof: proofText,
-          status: 'paid',
+          status: 'confirmed',
           updated_at: new Date().toISOString()
         })
         .eq('id', loanId)
@@ -64,11 +64,11 @@ export const useUpdateLoanPayment = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['active-loans'] });
-      toast.success("Payment proof submitted successfully");
+      queryClient.invalidateQueries({ queryKey: ['lender-loans-with-notifications'] });
+      toast.success("Payment confirmed successfully");
     },
     onError: (error) => {
-      toast.error("Failed to submit payment: " + (error as Error).message);
+      toast.error("Failed to confirm payment: " + (error as Error).message);
     }
   });
 };
