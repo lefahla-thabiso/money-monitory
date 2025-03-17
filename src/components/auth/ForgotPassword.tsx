@@ -41,24 +41,29 @@ export const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
       
       setIsLoading(true);
       
-      // Fetch user's security questions
+      // Fetch user's security questions from profiles table with security question metadata
       const { data, error } = await supabase
-        .from('security_questions')
+        .from('profiles')
         .select('*')
         .eq('email', email)
         .single();
         
       if (error) {
         if (error.code === 'PGRST116') {
-          throw new Error("No security questions found for this email");
+          throw new Error("No account found for this email");
         }
         throw error;
       }
       
+      // Check if user has security questions in their metadata
+      if (!data.security_question1 || !data.security_question2) {
+        throw new Error("Security questions have not been set up for this account");
+      }
+      
       setSecurityAnswers({
         email: email,
-        question1: data.question1,
-        question2: data.question2
+        question1: data.security_question1,
+        question2: data.security_question2
       });
       
       setSecurityState({
@@ -91,9 +96,9 @@ export const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
     setIsLoading(true);
     
     try {
-      // Verify security answers
+      // Verify security answers from profiles table
       const { data, error } = await supabase
-        .from('security_questions')
+        .from('profiles')
         .select('*')
         .eq('email', email)
         .single();
@@ -101,8 +106,8 @@ export const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
       if (error) throw error;
       
       // Case insensitive comparison
-      const answer1Correct = data.answer1.toLowerCase() === securityAnswers.answer1?.toLowerCase();
-      const answer2Correct = data.answer2.toLowerCase() === securityAnswers.answer2?.toLowerCase();
+      const answer1Correct = data.security_answer1?.toLowerCase() === securityAnswers.answer1?.toLowerCase();
+      const answer2Correct = data.security_answer2?.toLowerCase() === securityAnswers.answer2?.toLowerCase();
       
       if (answer1Correct && answer2Correct) {
         setSecurityState({
@@ -136,6 +141,15 @@ export const ForgotPassword = ({ onBack }: ForgotPasswordProps) => {
       }
       
       setIsLoading(true);
+      
+      // Get user id for the email
+      const { data: userData, error: userError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .single();
+        
+      if (userError) throw userError;
       
       // Update password directly
       const { error } = await supabase.auth.updateUser({

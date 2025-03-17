@@ -31,3 +31,13 @@ export interface PasswordRecoveryState {
   email: string;
   isVerified: boolean;
 }
+
+// New interface for security questions storage
+export interface SecurityQuestionsStorage {
+  id?: string;
+  email: string;
+  question1: string;
+  answer1: string;
+  question2: string;
+  answer2: string;
+}

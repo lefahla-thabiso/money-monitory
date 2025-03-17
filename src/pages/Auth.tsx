@@ -52,6 +52,19 @@ const Auth = () => {
     }
   };
 
+  const handleSelectChange = (field: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    if (errors[field as keyof FormData]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -88,7 +101,12 @@ const Auth = () => {
             data: {
               fullName: formData.fullName,
               contact: formData.contact,
-              accountNumber: formData.accountNumber
+              accountNumber: formData.accountNumber,
+              // Store security questions and answers in metadata
+              security_question1: formData.securityQuestion1,
+              security_answer1: formData.securityAnswer1,
+              security_question2: formData.securityQuestion2,
+              security_answer2: formData.securityAnswer2
             }
           }
         });
@@ -159,6 +177,7 @@ const Auth = () => {
               formData={formData}
               errors={errors}
               handleInputChange={handleInputChange}
+              handleSelectChange={handleSelectChange}
             />
           )}
           
