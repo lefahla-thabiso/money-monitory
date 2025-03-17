@@ -8,6 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+
+// Define payment methods
+const paymentMethods = ["M-Pesa", "Bank Transfer", "Cash", "EcoCash", "Orange Money"];
 
 // Update props to include both onDismiss and onSuccess for flexibility
 interface CreateLenderOfferFormProps {
@@ -32,6 +42,13 @@ export function CreateLenderOfferForm({ onDismiss, onSuccess }: CreateLenderOffe
     setFormData({
       ...formData,
       [name]: name === "amount" || name === "interest_rate" ? parseFloat(value) : value,
+    });
+  };
+  
+  const handleSelectChange = (value: string) => {
+    setFormData({
+      ...formData,
+      payment_method: value,
     });
   };
   
@@ -112,20 +129,21 @@ export function CreateLenderOfferForm({ onDismiss, onSuccess }: CreateLenderOffe
           
           <div className="space-y-2">
             <Label htmlFor="payment_method">Payment Method</Label>
-            <select
-              id="payment_method"
-              name="payment_method"
-              className="w-full p-2 border rounded-md"
-              value={formData.payment_method}
-              onChange={handleChange}
-              required
+            <Select
+              defaultValue={formData.payment_method}
+              onValueChange={handleSelectChange}
             >
-              {paymentMethods.map(method => (
-                <option key={method} value={method}>
-                  {method}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="payment_method" className="w-full">
+                <SelectValue placeholder="Select payment method" />
+              </SelectTrigger>
+              <SelectContent>
+                {paymentMethods.map(method => (
+                  <SelectItem key={method} value={method}>
+                    {method}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <Button type="submit" className="w-full bg-mint-500 hover:bg-mint-600" disabled={isPending}>
