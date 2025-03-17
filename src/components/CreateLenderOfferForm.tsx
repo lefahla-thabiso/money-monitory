@@ -9,9 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
-const paymentMethods = ["M-Pesa", "Bank Transfer", "Cash", "Airtel Money", "Orange Money"];
+// Update props to include both onDismiss and onSuccess for flexibility
+interface CreateLenderOfferFormProps {
+  onDismiss?: () => void;
+  onSuccess?: () => void;
+}
 
-export function CreateLenderOfferForm({ onDismiss }: { onDismiss?: () => void }) {
+export function CreateLenderOfferForm({ onDismiss, onSuccess }: CreateLenderOfferFormProps) {
   const { user } = useAuth();
   const { mutate, isPending } = useCreateLenderOffer();
   
@@ -19,7 +23,7 @@ export function CreateLenderOfferForm({ onDismiss }: { onDismiss?: () => void })
     full_name: "",
     contact: "",
     amount: 0,
-    payment_method: paymentMethods[0],
+    payment_method: "M-Pesa",
     interest_rate: 5,
   });
   
@@ -35,6 +39,9 @@ export function CreateLenderOfferForm({ onDismiss }: { onDismiss?: () => void })
     e.preventDefault();
     mutate(formData, {
       onSuccess: () => {
+        if (onSuccess) {
+          onSuccess();
+        }
         if (onDismiss) {
           onDismiss();
         }

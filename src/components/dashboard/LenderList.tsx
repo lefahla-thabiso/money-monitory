@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LenderOffer } from "@/types/lender";
 import { toast } from "sonner";
-import { useBorrowOffer } from "@/hooks/use-active-loans";
+import { useBorrowOffer } from "@/hooks/use-active-loans"; // Fixed import
 
 interface LenderListProps {
   isLoading: boolean;

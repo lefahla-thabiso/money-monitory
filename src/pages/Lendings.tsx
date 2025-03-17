@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useLenderOffersByUser } from "@/hooks/use-lender-offers";
+import { useUserLenderOffers } from "@/hooks/use-lender-offers";
 import { useLenderLoansWithNotifications, useConfirmLoanPayment } from "@/hooks/use-lender-loans-with-notifications";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const Lendings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data: myOffers, isLoading: isLoadingOffers } = useLenderOffersByUser(user?.id);
+  const { data: myOffers, isLoading: isLoadingOffers } = useUserLenderOffers();
   const { data: lenderLoansData, isLoading: isLoadingLoans } = useLenderLoansWithNotifications();
   const { mutate: confirmPayment, isPending: isConfirmingPayment } = useConfirmLoanPayment();
   
@@ -47,19 +47,16 @@ const Lendings = () => {
     
     const { payment_proof } = selectedLoan;
     
-    // Check if payment proof contains a URL
     const hasUrl = payment_proof?.includes('http');
     
     let textProof = payment_proof;
     let fileUrl = '';
     
-    // If payment proof contains both text and URL (separated by |)
     if (hasUrl && payment_proof?.includes('|')) {
       const parts = payment_proof.split('|').map(p => p.trim());
       textProof = parts[0];
       fileUrl = parts[1];
     } 
-    // If payment proof is just a URL
     else if (hasUrl) {
       textProof = '';
       fileUrl = payment_proof;
@@ -248,17 +245,15 @@ const Lendings = () => {
         </Tabs>
       </div>
       
-      {/* Create Offer Dialog */}
       <Dialog open={isCreateOfferOpen} onOpenChange={setIsCreateOfferOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create a Lending Offer</DialogTitle>
           </DialogHeader>
-          <CreateLenderOfferForm onSuccess={() => setIsCreateOfferOpen(false)} />
+          <CreateLenderOfferForm onDismiss={() => setIsCreateOfferOpen(false)} />
         </DialogContent>
       </Dialog>
       
-      {/* Payment Details Dialog */}
       <Dialog open={isPaymentDetailsOpen} onOpenChange={setIsPaymentDetailsOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
